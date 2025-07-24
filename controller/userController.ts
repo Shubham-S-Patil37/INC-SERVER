@@ -9,7 +9,7 @@ export class UserController {
   }
 
   // Create a new user
-  public createUser = async (req: Request, res: Response): Promise<void> => {
+  createUser = async (req: Request, res: Response): Promise<void> => {
     try {
       const userData = req.body;
       if (!userData.userName || !userData.password) {
@@ -96,7 +96,7 @@ export class UserController {
   };
 
   // User login
-  public loginUser = async (req: Request, res: Response): Promise<void> => {
+  loginUser = async (req: Request, res: Response): Promise<void> => {
     try {
       const { username, password } = req.body;
 
@@ -136,10 +136,7 @@ export class UserController {
   };
 
   // Forgot password
-  public forgotPassword = async (
-    req: Request,
-    res: Response
-  ): Promise<void> => {
+  forgotPassword = async (req: Request, res: Response): Promise<void> => {
     try {
       const { email } = req.body;
 
@@ -174,7 +171,7 @@ export class UserController {
   };
 
   // Verify OTP
-  public verifyOTP = async (req: Request, res: Response): Promise<void> => {
+  verifyOTP = async (req: Request, res: Response): Promise<void> => {
     try {
       const { email, otp } = req.body;
 
@@ -209,10 +206,7 @@ export class UserController {
   };
 
   // Update password
-  public updatePassword = async (
-    req: Request,
-    res: Response
-  ): Promise<void> => {
+  updatePassword = async (req: Request, res: Response): Promise<void> => {
     try {
       const { email, newPassword } = req.body;
 
@@ -258,10 +252,7 @@ export class UserController {
   };
 
   // Get user info from token
-  public getUserFromToken = async (
-    req: Request,
-    res: Response
-  ): Promise<void> => {
+  getUserFromToken = async (req: Request, res: Response): Promise<void> => {
     try {
       const authHeader = req.headers.authorization;
 
@@ -298,7 +289,7 @@ export class UserController {
   };
 
   // Refresh access token
-  public refreshToken = async (req: Request, res: Response): Promise<void> => {
+  refreshToken = async (req: Request, res: Response): Promise<void> => {
     try {
       const { refreshToken } = req.body;
 
@@ -339,10 +330,7 @@ export class UserController {
   };
 
   // Get current user's profile from token
-  public getUserProfile = async (
-    req: Request,
-    res: Response
-  ): Promise<void> => {
+  getUserProfile = async (req: Request, res: Response): Promise<void> => {
     try {
       const userId = req.user?.userId;
 
@@ -379,10 +367,7 @@ export class UserController {
   };
 
   // Update current user's profile from token
-  public updateUserProfile = async (
-    req: Request,
-    res: Response
-  ): Promise<void> => {
+  updateUserProfile = async (req: Request, res: Response): Promise<void> => {
     try {
       const userId = req.user?.userId;
 
@@ -425,10 +410,7 @@ export class UserController {
   };
 
   // Delete current user's profile from token
-  public deleteUserProfile = async (
-    req: Request,
-    res: Response
-  ): Promise<void> => {
+  deleteUserProfile = async (req: Request, res: Response): Promise<void> => {
     try {
       const userId = req.user?.userId;
 
@@ -464,7 +446,7 @@ export class UserController {
   };
 
   // Get all users
-  public getAllUsers = async (req: Request, res: Response): Promise<void> => {
+  getAllUsers = async (req: Request, res: Response): Promise<void> => {
     try {
       const page = parseInt(req.query.page as string) || 1;
       const limit = parseInt(req.query.limit as string) || 10;
@@ -493,7 +475,7 @@ export class UserController {
   };
 
   // Get user by ID
-  public getUserById = async (req: Request, res: Response): Promise<void> => {
+  getUserById = async (req: Request, res: Response): Promise<void> => {
     try {
       const userId = req.params.id;
       const user = await this.userService.getUserById(userId);
@@ -521,7 +503,7 @@ export class UserController {
   };
 
   // Update user
-  public updateUser = async (req: Request, res: Response): Promise<void> => {
+  updateUser = async (req: Request, res: Response): Promise<void> => {
     try {
       const userId = req.params.id;
       const updateData = req.body;
@@ -551,7 +533,7 @@ export class UserController {
   };
 
   // Delete user
-  public deleteUser = async (req: Request, res: Response): Promise<void> => {
+  deleteUser = async (req: Request, res: Response): Promise<void> => {
     try {
       const userId = req.params.id;
       const result = await this.userService.deleteUser(userId);
@@ -578,10 +560,7 @@ export class UserController {
   };
 
   // Get user by username
-  public getUserByUsername = async (
-    req: Request,
-    res: Response
-  ): Promise<void> => {
+  getUserByUsername = async (req: Request, res: Response): Promise<void> => {
     try {
       const username = req.params.username;
       const user = await this.userService.getUserByUsername(username);
@@ -609,10 +588,7 @@ export class UserController {
   };
 
   // Get users by role
-  public getUsersByRole = async (
-    req: Request,
-    res: Response
-  ): Promise<void> => {
+  getUsersByRole = async (req: Request, res: Response): Promise<void> => {
     try {
       const role = req.params.role as "admin" | "user" | "manager";
       const page = parseInt(req.query.page as string) || 1;
@@ -648,7 +624,7 @@ export class UserController {
     }
   };
 
-  public uploadFile = async (
+  uploadFile = async (
     buffer: Buffer,
     userId: string
   ): Promise<string | null> => {

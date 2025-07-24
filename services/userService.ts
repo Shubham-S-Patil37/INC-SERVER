@@ -75,10 +75,8 @@ export interface PaginatedUsers {
 }
 
 export class UserService {
-  // Create a new user
   public async createUser(userData: UserCreateData): Promise<IUser> {
     try {
-      // Check if user already exists by email or username
       const existingUser = await User.findOne({
         $or: [{ email: userData.email }, { username: userData.username }],
       });
@@ -91,11 +89,9 @@ export class UserService {
         }
       }
 
-      // Hash the password before saving
       const saltRounds = 12;
       const hashedPassword = await bcrypt.hash(userData.password, saltRounds);
 
-      // Create new user with audit fields
       const userDataWithAudit = {
         ...userData,
         password: hashedPassword,
@@ -119,33 +115,25 @@ export class UserService {
     }
   }
 
-  // User login
   public async loginUser(loginData: UserLoginData): Promise<UserLoginResult> {
     try {
-      // Find user by username
       const user = await User.findOne({ username: loginData.username }).exec();
-
       if (!user) {
         return {
           success: false,
           message: "Invalid username or password",
         };
       }
-
-      // Check password
       const isPasswordValid = await bcrypt.compare(
         loginData.password,
         user.password
       );
-
       if (!isPasswordValid) {
         return {
           success: false,
           message: "Invalid username or password",
         };
       }
-
-      // Generate access token with user info (short-lived)
       const accessTokenPayload = {
         userId: user._id,
         username: user.username,
@@ -156,7 +144,6 @@ export class UserService {
         lastName: user.lastName,
         type: "access",
       };
-
       const accessToken = jwt.sign(
         accessTokenPayload,
         process.env.JWT_SECRET || "",
@@ -165,13 +152,10 @@ export class UserService {
           algorithm: "HS256",
         } as jwt.SignOptions
       );
-
-      // Generate refresh token (long-lived, minimal payload)
       const refreshTokenPayload = {
         userId: user._id,
         type: "refresh",
       };
-
       const refreshToken = jwt.sign(
         refreshTokenPayload,
         process.env.REFRESH_TOKEN_SECRET as string,
@@ -180,7 +164,6 @@ export class UserService {
           algorithm: "HS256",
         } as jwt.SignOptions
       );
-
       return {
         success: true,
         message: "Login successful",
@@ -196,36 +179,27 @@ export class UserService {
     }
   }
 
-  // Generate OTP and send email for password reset
   public async forgotPassword(
     forgotData: ForgotPasswordData
   ): Promise<{ success: boolean; message: string }> {
     try {
       const user = await User.findOne({ email: forgotData.email }).exec();
-
       if (!user) {
         return {
           success: false,
           message: "No user found with this email address",
         };
       }
-
-      // Generate 6-digit OTP
       const otp = Math.floor(100000 + Math.random() * 900000).toString();
-      const otpExpiry = new Date(Date.now() + 600000); // 10 minutes from now
-
-      // Save OTP to user
+      const otpExpiry = new Date(Date.now() + 600000);
       user.resetPasswordOTP = otp;
       user.resetPasswordOTPExpires = otpExpiry;
       await user.save();
-
-      // Send OTP email
       await this.sendOTPEmail(
         user.email,
         otp,
         `${user.firstName} ${user.lastName}`
       );
-
       return {
         success: true,
         message: "Password reset OTP sent to your email",
@@ -238,7 +212,6 @@ export class UserService {
     }
   }
 
-  // Verify OTP for password reset
   public async verifyOTP(
     otpData: VerifyOTPData
   ): Promise<{ success: boolean; message: string }> {
@@ -248,14 +221,12 @@ export class UserService {
         resetPasswordOTP: otpData.otp,
         resetPasswordOTPExpires: { $gt: new Date() },
       }).exec();
-
       if (!user) {
         return {
           success: false,
           message: "Invalid or expired OTP",
         };
       }
-
       return {
         success: true,
         message: "OTP verified successfully",
@@ -268,33 +239,26 @@ export class UserService {
     }
   }
 
-  // Update password after OTP verification
   public async updatePassword(
     passwordData: UpdatePasswordData
   ): Promise<{ success: boolean; message: string }> {
     try {
       const user = await User.findOne({ email: passwordData.email }).exec();
-
       if (!user) {
         return {
           success: false,
           message: "User not found",
         };
       }
-
-      // Hash new password
       const saltRounds = 12;
       const hashedPassword = await bcrypt.hash(
         passwordData.newPassword,
         saltRounds
       );
-
-      // Update user password and clear OTP
       user.password = hashedPassword;
       user.resetPasswordOTP = undefined;
       user.resetPasswordOTPExpires = undefined;
       await user.save();
-
       return {
         success: true,
         message: "Password updated successfully",
@@ -307,25 +271,20 @@ export class UserService {
     }
   }
 
-  // Refresh access token using refresh token
   public async refreshAccessToken(
     refreshTokenData: RefreshTokenData
   ): Promise<TokenResponse> {
     try {
-      // Verify refresh token
       const decoded = jwt.verify(
         refreshTokenData.refreshToken,
         process.env.REFRESH_TOKEN_SECRET as string
       ) as any;
-
       if (decoded.type !== "refresh") {
         return {
           success: false,
           message: "Invalid token type",
         };
       }
-
-      // Find user
       const user = await User.findById(decoded.userId).exec();
       if (!user) {
         return {
@@ -333,8 +292,6 @@ export class UserService {
           message: "User not found",
         };
       }
-
-      // Generate new access token
       const accessTokenPayload = {
         userId: user._id,
         username: user.username,
@@ -345,7 +302,6 @@ export class UserService {
         lastName: user.lastName,
         type: "access",
       };
-
       const newAccessToken = jwt.sign(
         accessTokenPayload,
         process.env.JWT_SECRET as string,
@@ -354,11 +310,10 @@ export class UserService {
           algorithm: "HS256",
         } as jwt.SignOptions
       );
-
       return {
         success: true,
         accessToken: newAccessToken,
-        refreshToken: refreshTokenData.refreshToken, // Keep the same refresh token
+        refreshToken: refreshTokenData.refreshToken,
       };
     } catch (error: any) {
       return {
@@ -368,14 +323,12 @@ export class UserService {
     }
   }
 
-  // Send OTP email for password reset
   private async sendOTPEmail(
     email: string,
     otp: string,
     userName: string
   ): Promise<void> {
     try {
-      // Create transporter
       const transporter = nodemailer.createTransport({
         host: process.env.EMAIL_HOST,
         port: parseInt(process.env.EMAIL_PORT || "587"),
@@ -385,8 +338,6 @@ export class UserService {
           pass: process.env.EMAIL_PASS,
         },
       });
-
-      // Email content
       const mailOptions = {
         from: process.env.EMAIL_FROM,
         to: email,
@@ -413,7 +364,6 @@ export class UserService {
           </div>
         `,
       };
-
       await transporter.sendMail(mailOptions);
     } catch (error) {
       console.error("Failed to send OTP email:", error);
@@ -421,7 +371,6 @@ export class UserService {
     }
   }
 
-  // Decode JWT token and get user information
   public decodeToken(token: string): any {
     try {
       const decoded = jwt.verify(token, process.env.JWT_SECRET as string);
@@ -437,30 +386,25 @@ export class UserService {
     }
   }
 
-  // Get user information from token
   public async getUserFromToken(
     token: string
   ): Promise<{ success: boolean; user?: IUser; message?: string }> {
     try {
       const decodedResult = this.decodeToken(token);
-
       if (!decodedResult.success) {
         return {
           success: false,
           message: decodedResult.message,
         };
       }
-
       const decoded = decodedResult.data as any;
       const user = await User.findById(decoded.userId).exec();
-
       if (!user) {
         return {
           success: false,
           message: "User not found",
         };
       }
-
       return {
         success: true,
         user: user,
@@ -473,7 +417,6 @@ export class UserService {
     }
   }
 
-  // Get all users with pagination and search
   public async getAllUsers(
     page: number = 1,
     limit: number = 10,
@@ -481,8 +424,6 @@ export class UserService {
   ): Promise<PaginatedUsers> {
     try {
       const skip = (page - 1) * limit;
-
-      // Build search query
       let query: any = {};
       if (search) {
         query = {
@@ -495,18 +436,13 @@ export class UserService {
           ],
         };
       }
-
-      // Get users with pagination
       const users = await User.find(query)
         .sort({ createdAt: -1 })
         .skip(skip)
         .limit(limit)
         .exec();
-
-      // Get total count
       const totalUsers = await User.countDocuments(query);
       const totalPages = Math.ceil(totalUsers / limit);
-
       return {
         users,
         totalUsers,
@@ -519,13 +455,11 @@ export class UserService {
     }
   }
 
-  // Get user by ID
   public async getUserById(userId: string): Promise<IUser | null> {
     try {
       if (!mongoose.Types.ObjectId.isValid(userId)) {
         throw new Error("Invalid user ID format");
       }
-
       const user = await User.findById(userId).exec();
       return user;
     } catch (error) {
@@ -533,7 +467,6 @@ export class UserService {
     }
   }
 
-  // Update user
   public async updateUser(
     userId: string,
     updateData: UserUpdateData
@@ -542,13 +475,9 @@ export class UserService {
       if (!mongoose.Types.ObjectId.isValid(userId)) {
         throw new Error("Invalid user ID format");
       }
-
-      // Validate updatedBy is provided
       if (!updateData.updatedBy || typeof updateData.updatedBy !== "number") {
         throw new Error("Valid updatedBy user ID is required");
       }
-
-      // Check if email or username is being updated and if they already exist
       if (updateData.email) {
         const existingUser = await User.findOne({
           email: updateData.email,
@@ -558,7 +487,6 @@ export class UserService {
           throw new Error("Email already exists");
         }
       }
-
       if (updateData.username) {
         const existingUser = await User.findOne({
           username: updateData.username,
@@ -568,12 +496,10 @@ export class UserService {
           throw new Error("Username already exists");
         }
       }
-
       const user = await User.findByIdAndUpdate(userId, updateData, {
         new: true,
         runValidators: true,
       }).exec();
-
       return user;
     } catch (error: any) {
       if (error.code === 11000) {
@@ -589,13 +515,11 @@ export class UserService {
     }
   }
 
-  // Delete user
   public async deleteUser(userId: string): Promise<boolean> {
     try {
       if (!mongoose.Types.ObjectId.isValid(userId)) {
         throw new Error("Invalid user ID format");
       }
-
       const result = await User.findByIdAndDelete(userId).exec();
       return result !== null;
     } catch (error) {
@@ -603,7 +527,6 @@ export class UserService {
     }
   }
 
-  // Get user by username
   public async getUserByUsername(username: string): Promise<IUser | null> {
     try {
       const user = await User.findOne({ username }).exec();
@@ -613,7 +536,6 @@ export class UserService {
     }
   }
 
-  // Get users by role
   public async getUsersByRole(
     role: "admin" | "user" | "manager",
     page: number = 1,
@@ -621,16 +543,13 @@ export class UserService {
   ): Promise<PaginatedUsers> {
     try {
       const skip = (page - 1) * limit;
-
       const users = await User.find({ role })
         .sort({ createdAt: -1 })
         .skip(skip)
         .limit(limit)
         .exec();
-
       const totalUsers = await User.countDocuments({ role });
       const totalPages = Math.ceil(totalUsers / limit);
-
       return {
         users,
         totalUsers,
@@ -649,7 +568,6 @@ export class UserService {
       api_key: "939636488482192",
       api_secret: "ihb_VXVHyu-Sg-VOSs_c1ZqjFo0",
     });
-
     return new Promise((resolve, reject) => {
       const uploadStream = cloudinary.uploader.upload_stream(
         { folder: "my_uploads" },
@@ -671,7 +589,6 @@ export class UserService {
     const data = await User.findByIdAndUpdate(userId, {
       imageUrl: imageUrl,
     }).exec();
-
     if (!data) {
       throw new Error("User not found");
     }
