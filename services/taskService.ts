@@ -9,7 +9,6 @@ export interface TaskCreateData {
   assignedTo?: number;
   assignedBy: number;
   assignedToName?: string;
-  assignedByName: string;
   createdBy: number;
   dueDate?: Date;
 }
@@ -21,8 +20,6 @@ export interface TaskUpdateData {
   priority?: "low" | "medium" | "high";
   assignedTo?: number;
   assignedBy?: number;
-  assignedToName?: string;
-  assignedByName?: string;
   updatedBy: number;
   dueDate?: Date;
 }
@@ -59,16 +56,10 @@ export class TaskService {
       }
 
       // Validate assignedTo user ID if provided
-      if (taskData.assignedTo && typeof taskData.assignedTo !== "number") {
-        throw new Error("Invalid assignedTo user ID format");
-      }
+      // if (taskData.assignedTo && typeof taskData.assignedTo !== "number") {
+      //   throw new Error("Invalid assignedTo user ID format");
+      // }
 
-      // Validate required names
-      if (!taskData.assignedByName || taskData.assignedByName.trim() === "") {
-        throw new Error("AssignedByName is required");
-      }
-
-      // Set updatedBy fields to createdBy for new tasks
       const taskDataWithUpdate = {
         ...taskData,
         updatedBy: taskData.createdBy,

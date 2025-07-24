@@ -33,9 +33,9 @@ router.get(
 );
 
 // Admin routes for managing other users
-router.get("/admin/users/:id", authenticateToken, userController.getUserById);
-router.put("/admin/users/:id", authenticateToken, userController.updateUser);
-router.delete("/admin/users/:id", authenticateToken, userController.deleteUser);
+router.get("/admin/users", authenticateToken, userController.getUserById);
+router.put("/admin/users/", authenticateToken, userController.updateUser);
+router.delete("/admin/users/", authenticateToken, userController.deleteUser);
 
 // Authentication routes (no auth required)
 router.post("/auth/login", userController.loginUser);

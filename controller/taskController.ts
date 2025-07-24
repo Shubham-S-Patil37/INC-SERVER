@@ -25,8 +25,7 @@ export class TaskController {
       const taskData = {
         ...req.body,
         createdBy: parseInt(userId),
-        assignedBy: parseInt(userId), // Default to current user if not specified
-        assignedByName: `${req.user?.firstName} ${req.user?.lastName}`,
+        assignedBy: parseInt(userId),
       };
 
       const task = await this.taskService.createTask(taskData);

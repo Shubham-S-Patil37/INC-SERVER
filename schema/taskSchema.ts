@@ -8,8 +8,6 @@ export interface ITask extends Document {
   priority: "low" | "medium" | "high";
   assignedTo?: number;
   assignedBy: number;
-  assignedToName?: string;
-  assignedByName: string;
   createdBy: number;
   updatedBy: number;
   dueDate?: Date;
@@ -47,16 +45,6 @@ const TaskSchema: Schema = new Schema(
     assignedBy: {
       type: Number,
       required: [true, "AssignedBy is required"],
-    },
-    assignedToName: {
-      type: String,
-      trim: true,
-      default: null,
-    },
-    assignedByName: {
-      type: String,
-      required: [true, "AssignedByName is required"],
-      trim: true,
     },
     createdBy: {
       type: Number,
