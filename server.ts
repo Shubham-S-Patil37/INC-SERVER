@@ -6,6 +6,7 @@ import dotenv from "dotenv";
 import { db } from "./db/connection";
 import userRoutes from "./routes/userRoutes";
 import taskRoutes from "./routes/taskRoutes";
+import uploadRoutes from "./routes/uploadRoutes";
 
 // Load environment variables
 dotenv.config();
@@ -26,6 +27,7 @@ db.connect().catch(console.error);
 // Routes
 app.use("/api", userRoutes);
 app.use("/api", taskRoutes);
+app.use("/api", uploadRoutes);
 
 app.get("/testEndPoint", function (req, res) {
   var response = { response: "test endpoint" };

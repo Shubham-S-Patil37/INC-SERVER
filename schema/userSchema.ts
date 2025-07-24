@@ -9,6 +9,7 @@ export interface IUser extends Document {
   lastName: string;
   role: "admin" | "user" | "manager";
   permissions: string[];
+  imageUrl?: string;
   createdBy?: number;
   updatedBy?: number;
   resetPasswordOTP?: string;
@@ -18,7 +19,7 @@ export interface IUser extends Document {
 }
 const UserSchema: Schema = new Schema(
   {
-    userName: {
+    username: {
       type: String,
       required: [true, "Username is required"],
       unique: true,
@@ -65,6 +66,11 @@ const UserSchema: Schema = new Schema(
         message:
           "Invalid permission. Allowed permissions: Read, Write, Delete, Admin, Manage",
       },
+    },
+    imageUrl: {
+      type: String,
+      default: null,
+      trim: true,
     },
     createdBy: {
       type: Number,

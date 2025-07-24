@@ -4,6 +4,8 @@ import bcrypt from "bcryptjs";
 import jwt from "jsonwebtoken";
 import nodemailer from "nodemailer";
 import crypto from "crypto";
+import { v2 as cloudinary } from "cloudinary";
+import { Readable } from "stream";
 
 export interface UserCreateData {
   username: string;
@@ -639,5 +641,43 @@ export class UserService {
     } catch (error) {
       throw error;
     }
+  }
+
+  public async uploadFile(buffer: Buffer, userId: string) {
+    cloudinary.config({
+      cloud_name: "dkuxov9di",
+      api_key: "939636488482192",
+      api_secret: "ihb_VXVHyu-Sg-VOSs_c1ZqjFo0",
+    });
+
+    return new Promise((resolve, reject) => {
+      const uploadStream = cloudinary.uploader.upload_stream(
+        { folder: "my_uploads" },
+        async (error, result) => {
+          if (error) {
+            reject(error);
+          } else {
+            const imageUrl =
+              result && result.secure_url ? result.secure_url : null;
+            resolve(imageUrl);
+          }
+        }
+      );
+      Readable.from(buffer).pipe(uploadStream);
+    });
+  }
+
+  async updateImageUrl(userId: string, imageUrl: string) {
+    const data = await User.findByIdAndUpdate(userId, {
+      imageUrl: imageUrl,
+    }).exec();
+
+    if (!data) {
+      throw new Error("User not found");
+    }
+    if (!data.imageUrl) {
+      throw new Error("Image URL not updated");
+    }
+    return data;
   }
 }

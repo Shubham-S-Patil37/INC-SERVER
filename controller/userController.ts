@@ -13,6 +13,10 @@ export class UserController {
     try {
       const userData = req.body;
       if (!userData.userName || !userData.password) {
+        console.error(
+          "Error creating user:",
+          "Username and password are required"
+        );
         res.status(400).json({
           success: false,
           message: "Username and password are required",
@@ -21,6 +25,7 @@ export class UserController {
       }
 
       if (!userData.email) {
+        console.error("Error creating user:", "Email is required");
         res.status(400).json({
           success: false,
           message: "Email is required",
@@ -32,6 +37,10 @@ export class UserController {
         !userData.role ||
         !["admin", "user", "manager"].includes(userData.role)
       ) {
+        console.error(
+          "Error creating user:",
+          "Role is required and must be one of: admin, user, manager"
+        );
         res.status(400).json({
           success: false,
           message: "Role is required and must be one of: admin, user, manager",
@@ -50,20 +59,34 @@ export class UserController {
       userData.updatedBy = parseInt(userId);
       userData.role = userData.role.toLowerCase(); // Ensure role is lowercase
       if (userData.role !== "admin" && userData.role !== "user") {
+        console.error(
+          "Error creating user:",
+          "Role must be one of: admin, user"
+        );
         res.status(400).json({
           success: false,
           message: "Role must be one of: admin, user",
         });
         return;
       }
-
+      userData.username = userData.userName; // Ensure username is set correctly
+      delete userData.userName;
       const user = await this.userService.createUser(userData);
+      if (!user) {
+        console.error("Error creating user:", "User already exists");
+        res.status(409).json({
+          success: false,
+          message: "User already exists",
+        });
+        return;
+      }
       res.status(201).json({
         success: true,
         message: "User created successfully",
         data: user,
       });
     } catch (error: any) {
+      console.error("Error creating user:", error.message);
       res.status(400).json({
         success: false,
         message: error.message || "Error creating user",
@@ -622,6 +645,29 @@ export class UserController {
         message: error.message || "Error retrieving users by role",
         error: error,
       });
+    }
+  };
+
+  public uploadFile = async (
+    buffer: Buffer,
+    userId: string
+  ): Promise<string | null> => {
+    try {
+      const userService = new UserService();
+      const url = await userService.uploadFile(buffer, userId);
+
+      if (!url) {
+        console.error("File upload failed");
+        return null;
+      }
+
+      console.log("File uploaded successfully:", url);
+
+      await userService.updateImageUrl(userId, url as string);
+      return url as string | null;
+    } catch (error) {
+      console.error("Error uploading file:", error);
+      return null;
     }
   };
 }
