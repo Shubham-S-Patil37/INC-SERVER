@@ -12,6 +12,51 @@ export class UserController {
   public createUser = async (req: Request, res: Response): Promise<void> => {
     try {
       const userData = req.body;
+      if (!userData.userName || !userData.password) {
+        res.status(400).json({
+          success: false,
+          message: "Username and password are required",
+        });
+        return;
+      }
+
+      if (!userData.email) {
+        res.status(400).json({
+          success: false,
+          message: "Email is required",
+        });
+        return;
+      }
+
+      if (
+        !userData.role ||
+        !["admin", "user", "manager"].includes(userData.role)
+      ) {
+        res.status(400).json({
+          success: false,
+          message: "Role is required and must be one of: admin, user, manager",
+        });
+        return;
+      }
+
+      const names = userData.name.split(" ");
+      userData.firstName = names[0];
+      userData.lastName = names[1] || "";
+
+      // Add createdBy from authenticated user
+      const userId = req.user?.userId || "1";
+
+      userData.createdBy = parseInt(userId);
+      userData.updatedBy = parseInt(userId);
+      userData.role = userData.role.toLowerCase(); // Ensure role is lowercase
+      if (userData.role !== "admin" && userData.role !== "user") {
+        res.status(400).json({
+          success: false,
+          message: "Role must be one of: admin, user",
+        });
+        return;
+      }
+
       const user = await this.userService.createUser(userData);
       res.status(201).json({
         success: true,
@@ -22,7 +67,7 @@ export class UserController {
       res.status(400).json({
         success: false,
         message: error.message || "Error creating user",
-        error: error,
+        error: JSON.stringify(error),
       });
     }
   };
