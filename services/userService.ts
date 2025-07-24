@@ -194,6 +194,7 @@ export class UserService {
       const otpExpiry = new Date(Date.now() + 600000);
       user.resetPasswordOTP = otp;
       user.resetPasswordOTPExpires = otpExpiry;
+      if (!user.username) user.username = user.email.split("@")[0];
       await user.save();
       await this.sendOTPEmail(
         user.email,
